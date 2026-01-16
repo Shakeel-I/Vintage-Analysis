@@ -1,6 +1,12 @@
 # Vintage-Analysis
 Vintage Tables and Vintage Curves
 
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/4ba12fba-858c-4172-89e4-0826b40c983c" />
+<img width="857" height="707" alt="image" src="https://github.com/user-attachments/assets/75910031-0d94-410d-a250-6303bdd6238a" />
+
+
+```
+
 /* 1. Import CSV into SAS */
 proc import datafile="credit_record.csv"
     out=work.loans_raw
@@ -138,3 +144,4 @@ proc sql;
     inner join work.bad_ids as b
         on a.ID = b.ID;
 quit;
+```
