@@ -5,9 +5,9 @@ Vintage Tables and Vintage Curves
 <img width="857" height="707" alt="image" src="https://github.com/user-attachments/assets/75910031-0d94-410d-a250-6303bdd6238a" />
 
 
-```
 
 /* 1. Import CSV into SAS */
+```
 proc import datafile="credit_record.csv"
     out=work.loans_raw
     dbms=csv
@@ -15,7 +15,9 @@ proc import datafile="credit_record.csv"
     getnames=yes;
     guessingrows=1000;
 run;
+```
 /* 1a. Remove rows where STATUS is X or C, and create numeric STATUS_N */
+```
 data work.loans_clean;
     set work.loans_raw;
     length STATUS_C $1;
@@ -25,7 +27,9 @@ data work.loans_clean;
     /* Convert remaining STATUS to numeric */
     STATUS_N = input(STATUS_C, best12.);
 run;
+```
 /* 2. Ensure dates are SAS dates and derive vintage quarter and MOB quarter */
+```
 data work.loans_prep;
     set work.loans_clean;
     format START_DATE SNAPSHOT_MONTH date9.;
@@ -47,7 +51,9 @@ data work.loans_prep;
     /* Portfolio size indicator */
     obs = 1;
 run;
+```
 /* 3. Aggregate by vintage quarter and MOB quarter */
+```
 proc summary data=work.loans_prep nway;
     class vintage MOB_Q;
     var obs flag_30 flag_60 flag_90;
@@ -57,7 +63,9 @@ proc summary data=work.loans_prep nway;
         sum(flag_60)  = n_60
         sum(flag_90)  = n_90;
 run;
+```
 /* 4. Compute delinquency rates by vintage quarter and MOB quarter */
+```
 data work.vintage_rates;
     set work.vintage_agg;
     if n_accts > 0 then do;
@@ -71,7 +79,9 @@ data work.vintage_rates;
         rate_90 = .;
     end;
 run;
+```
 /* 5. Vintage tables: rates by vintage (rows) and MOB quarter (columns) */
+```
 proc sort data=work.vintage_rates;
     by vintage MOB_Q;
 run;
@@ -90,7 +100,9 @@ proc transpose data=work.vintage_rates out=work.vintage90_table prefix=MOB_Q;
     id MOB_Q;
     var rate_90;
 run;
+```
 /* 5a. PRINT vintage tables formatted to 4 decimal places */
+```
 title "Vintage Table - >30 Days Overdue";
 proc print data=work.vintage30_table noobs label;
     format MOB_Q0-MOB_Q8 percent8.4;
@@ -106,23 +118,31 @@ proc print data=work.vintage90_table noobs label;
     format MOB_Q0-MOB_Q8 percent8.4;
     var vintage MOB_Q0-MOB_Q8;
 run;
+```
 /* 6. Vintage plots in quarters */
+```
 ods graphics on;
+```
 /* >30 days overdue */
+```
 proc sgplot data=work.vintage_rates;
     series x=MOB_Q y=rate_30 / group=vintage lineattrs=(thickness=2);
     yaxis label="Cumulative Bad Rates" grid;
     xaxis label="Quarters on Books (MOB quarter)";
     title "Vintage Curve - >30 Days Overdue (Quarterly)";
 run;
+```
 /* >60 days overdue */
+```
 proc sgplot data=work.vintage_rates;
     series x=MOB_Q y=rate_60 / group=vintage lineattrs=(thickness=2);
     yaxis label="Cumulative Bad Rates" grid;
     xaxis label="Quarters on Books (MOB quarter)";
     title "Vintage Curve - >60 Days Overdue (Quarterly)";
 run;
+```
 /* >90 days overdue */
+```
 proc sgplot data=work.vintage_rates;
     series x=MOB_Q y=rate_90 / group=vintage lineattrs=(thickness=2);
     yaxis label="Cumulative Bad Rates" grid;
@@ -130,7 +150,9 @@ proc sgplot data=work.vintage_rates;
     title "Vintage Curve - >90 Days Overdue (Quarterly)";
 run;
 ods graphics off;
+```
 /* 7. Bad-loan subset (ever 90+ DPD) */
+```
 proc sql;
     create table work.bad_ids as
     select distinct ID
